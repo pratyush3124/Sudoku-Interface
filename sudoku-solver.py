@@ -7,43 +7,22 @@ class Sudoku_solver(Tk):
         Tk.__init__(self)
         
         frame = Sudoku_grid(self)
-        frame.grid(row = 0, column = 0)
+        frame.pack()
 
 
-class Sudoku_grid(Frame):
+class Sudoku_grid(Canvas):
     def __init__(self,parent):
-        Frame.__init__(self,parent)
+        Canvas.__init__(self,parent, width=497, height=497)
         self.parent = parent
 
         self.sudoku = Sudoku()
         self.sudoku.generate()
 
-        self.boxes = [[0 for i in range(3)] for j in range(3)]
-        self.cells = [[0 for i in range(9)] for j in range(9)]
-        font = ('Ariel',22,'bold')
-        for i in range(3):
-            for j in range(3):
-                self.boxes[i][j] = Label(self,text=' ', font=font, background='white', bd=4, relief='ridge',height = 6,width = 12)
-                self.boxes[i][j].grid(row = i,column = j)
+        self.create_line(166,0,166,500,width=5)
+        self.create_line(166*2,0,166*2,500,width=5)
+        self.create_line(0,166,500,166,width=5)
+        self.create_line(0,166*2,500,166*2,width=5)
 
-        for i in range(9):
-            for j in range(9):
-                string = ''
-
-                if i%3 > 1:
-                    string += 'S'
-                if i%3 < 1:
-                    string += 'N'
-                if j%3 > 1:
-                    string += 'E'
-                if j%3 < 1:
-                    string += 'W'
-
-                t = self.sudoku.sudoku[i][j] if self.sudoku.sudoku[i][j] != 0 else ''
-                self.cells[i][j] = Label(self, text=t, font=font, background='white', bd=1, relief='ridge', height=2, width=4)
-                self.cells[i][j].grid(row = i//3,column = j//3,sticky = string)
-                self.cells[i][j].bind('<Button-1>',lambda event,r=i,c=j: self.click(r,c))
-        
         self.focus_set()
         self.bind('<Key>',lambda event: self.write(event))
         self.bind('<Left>',lambda event: self.left())
@@ -51,19 +30,30 @@ class Sudoku_grid(Frame):
         self.bind('<Up>',lambda event: self.up())
         self.bind('<Down>',lambda event: self.down())
         self.bind('<BackSpace>',lambda event: self.delete())
+        self.bind('<Button-1>',lambda event: self.click(event))
 
-        self.marker = [0,0]
+        self.positions = [[0 for i in range(9)] for j in range(9)]
+
+        for k in range(3):
+            for l in range(3):
+                for i in range(3):
+                    for j in range(3):
+                        self.positions[k*3+i][l*3+j] = (167*k+i*55, 167*l+j*55, 167*k+(i+1)*55, 167*l+(j+1)*55)
+                        a = self.positions[k*3+i][l*3+j]
+                        self.create_rectangle(a[0],a[1],a[2],a[3],fill='white')
+
+        self.marker = [[0,0],[0,0]]
         self.refresh()
 
     def refresh(self):
-        for i in range(9):
-            for j in range(9):
-                self.cells[i][j]['background'] = 'white'        
-        self.cells[self.marker[0]][self.marker[1]]['background'] = 'yellow'
+        y = self.positions[self.marker[0][0]][self.marker[0][1]]
+        self.create_rectangle(y[0],y[1],y[2],y[3],fill='white')
+        x = self.positions[self.marker[1][0]][self.marker[1][1]]
+        self.create_rectangle(x[0],x[1],x[2],x[3],fill='yellow')
 
     def write(self,event):
         if event.char.isnumeric():
-            self.cells[self.marker[0]][self.marker[1]]['text'] = event.char if event.char!='0' else None
+            self.positions[self.marker[0]][self.marker[1]]['text'] = event.char if event.char!='0' else None
         elif event.char == 'w':
             self.up()
         elif event.char == 's':
@@ -74,25 +64,36 @@ class Sudoku_grid(Frame):
             self.right()
 
     def left(self):
-        self.marker[1]-= 1 if self.marker[1]-1 in range(9) else 0
+        x = (self.marker[1][0],self.marker[1][1])
+        self.marker[0] = [x[0],x[1]]
+        self.marker[1][0]-= 1 if self.marker[1][0]-1 in range(9) else 0
         self.refresh()
     def right(self):
-        self.marker[1]+=1 if self.marker[1]+1 in range(9) else 0
+        x = (self.marker[1][0],self.marker[1][1])
+        self.marker[0] = [x[0],x[1]]
+        self.marker[1][0]+=1 if self.marker[1][0]+1 in range(9) else 0
         self.refresh()
     def up(self):
-        self.marker[0]-=1 if self.marker[0]-1 in range(9) else 0
+        x = (self.marker[1][0],self.marker[1][1])
+        self.marker[0] = [x[0],x[1]]
+        self.marker[1][1]-=1 if self.marker[1][1]-1 in range(9) else 0
         self.refresh()
     def down(self):
-        self.marker[0]+=1 if self.marker[0]+1 in range(9) else 0
+        x = (self.marker[1][0],self.marker[1][1])
+        self.marker[0] = [x[0],x[1]]
+        self.marker[1][1]+=1 if self.marker[1][1]+1 in range(9) else 0
         self.refresh()
 
-    def click(self,r,c):
-        self.marker = [r,c]
+    def click(self,event):
+        x = (self.marker[1][0],self.marker[1][1])
+        self.marker[0] = [x[0],x[1]]
+        a,b = event.x//167,event.y//167
+        c,d = event.x%167,event.y%167
+        self.marker[1] = [a*3+c//55,b*3+d//55]
         self.refresh()
 
     def delete(self):
-        self.cells[self.marker[0]][self.marker[1]]['text'] = ' '
-
+        self.positions[self.marker[0]][self.marker[1]]['text'] = ' '
 
 class Sudoku():
     def __init__(self):
@@ -139,12 +140,6 @@ class Sudoku():
             insolve()
         except:
             return
-
-    # def solvable(self):
-        # for i in range(9):
-            # for j in range(9):
-                # if self.sudoku[i][j] == 0:
-                    # if check(i,j,sudoku[i][j]):
 
     def generate(self):
         for _ in range(50):
