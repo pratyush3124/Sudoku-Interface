@@ -42,6 +42,8 @@ class Sudoku_grid(Canvas):
                         a = self.positions[k*3+i][l*3+j]
                         self.create_rectangle(a[0],a[1],a[2],a[3],fill='white')
 
+        self.numbers = [[0 for i in range(9)] for j in range(9)]
+
         self.marker = [[0,0],[0,0]]
         self.refresh()
 
@@ -51,9 +53,19 @@ class Sudoku_grid(Canvas):
         x = self.positions[self.marker[1][0]][self.marker[1][1]]
         self.create_rectangle(x[0],x[1],x[2],x[3],fill='yellow')
 
+        if self.numbers[self.marker[0][0]][self.marker[0][1]] != 0:
+            self.numbers[self.marker[0][0]][self.marker[0][1]]['background'] = 'white'
+        if self.numbers[self.marker[1][0]][self.marker[1][1]] != 0:
+            self.numbers[self.marker[1][0]][self.marker[1][1]]['background'] = 'yellow'
+
     def write(self,event):
-        if event.char.isnumeric():
-            self.positions[self.marker[0]][self.marker[1]]['text'] = event.char if event.char!='0' else None
+        if event.char.isnumeric() and event.char != '0':
+            a = self.marker[1][0]
+            b = self.marker[1][1]
+            if self.numbers[a][b] != 0:
+                self.numbers[a][b].destroy()
+            self.numbers[a][b] = Label(self,text=event.char,background='yellow')
+            self.numbers[a][b].place(x=self.positions[a][b][0]+20,y=self.positions[a][b][1]+20)
         elif event.char == 'w':
             self.up()
         elif event.char == 's':
@@ -62,6 +74,8 @@ class Sudoku_grid(Canvas):
             self.left()
         elif event.char == 'd':
             self.right()
+        else:
+            pass
 
     def left(self):
         x = (self.marker[1][0],self.marker[1][1])
@@ -93,9 +107,13 @@ class Sudoku_grid(Canvas):
         self.refresh()
 
     def delete(self):
-        self.positions[self.marker[0]][self.marker[1]]['text'] = ' '
+        if self.numbers[self.marker[1][0]][self.marker[1][1]] != 0:
+            self.numbers[self.marker[1][0]][self.marker[1][1]].destroy()
+            self.numbers[self.marker[1][0]][self.marker[1][1]] = 0
+
 
 class Sudoku():
+    
     def __init__(self):
         self.sudoku = [[0 for i in range(9)] for j in range(9)]
         """self.sudoku = [
