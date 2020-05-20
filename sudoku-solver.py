@@ -23,6 +23,28 @@ class Sudoku_grid(Canvas):
         self.create_line(0,166,500,166,width=5)
         self.create_line(0,166*2,500,166*2,width=5)
 
+        self.positions = [[0 for i in range(9)] for j in range(9)]
+        self.numbers = [[0 for i in range(9)] for j in range(9)]
+
+        self.bg = 'white'
+        self.marker_c = 'yellow'
+        self.fixed_c = 'brown'
+        self.dynamic_c = 'black'
+
+        for k in range(3):
+            for l in range(3):
+                for i in range(3):
+                    for j in range(3):
+                        self.positions[k*3+i][l*3+j] = (167*k+i*55, 167*l+j*55, 167*k+(i+1)*55, 167*l+(j+1)*55)
+                        a = self.positions[k*3+i][l*3+j]
+                        self.create_rectangle(a[0],a[1],a[2],a[3],fill=self.bg)
+
+        for i in range(9):
+            for j in range(9):
+                if self.sudoku.sudoku[i][j] != 0:
+                    self.numbers[i][j] = Label(self,text=self.sudoku.sudoku[i][j],fg=self.fixed_c,font=('ariel',26),background=self.bg)
+                    self.numbers[i][j].place(x=self.positions[i][j][0]+15,y=self.positions[i][j][1]+7)
+
         self.focus_set()
         self.bind('<Key>',lambda event: self.write(event))
         self.bind('<Left>',lambda event: self.left())
@@ -32,40 +54,33 @@ class Sudoku_grid(Canvas):
         self.bind('<BackSpace>',lambda event: self.delete())
         self.bind('<Button-1>',lambda event: self.click(event))
 
-        self.positions = [[0 for i in range(9)] for j in range(9)]
-
-        for k in range(3):
-            for l in range(3):
-                for i in range(3):
-                    for j in range(3):
-                        self.positions[k*3+i][l*3+j] = (167*k+i*55, 167*l+j*55, 167*k+(i+1)*55, 167*l+(j+1)*55)
-                        a = self.positions[k*3+i][l*3+j]
-                        self.create_rectangle(a[0],a[1],a[2],a[3],fill='white')
-
-        self.numbers = [[0 for i in range(9)] for j in range(9)]
-
         self.marker = [[0,0],[0,0]]
         self.refresh()
 
     def refresh(self):
         y = self.positions[self.marker[0][0]][self.marker[0][1]]
-        self.create_rectangle(y[0],y[1],y[2],y[3],fill='white')
+        self.create_rectangle(y[0],y[1],y[2],y[3],fill=self.bg)
         x = self.positions[self.marker[1][0]][self.marker[1][1]]
-        self.create_rectangle(x[0],x[1],x[2],x[3],fill='yellow')
+        self.create_rectangle(x[0],x[1],x[2],x[3],fill=self.marker_c)
 
         if self.numbers[self.marker[0][0]][self.marker[0][1]] != 0:
-            self.numbers[self.marker[0][0]][self.marker[0][1]]['background'] = 'white'
+            self.numbers[self.marker[0][0]][self.marker[0][1]]['background'] = self.bg
         if self.numbers[self.marker[1][0]][self.marker[1][1]] != 0:
-            self.numbers[self.marker[1][0]][self.marker[1][1]]['background'] = 'yellow'
+            self.numbers[self.marker[1][0]][self.marker[1][1]]['background'] = self.marker_c
 
     def write(self,event):
         if event.char.isnumeric() and event.char != '0':
             a = self.marker[1][0]
             b = self.marker[1][1]
             if self.numbers[a][b] != 0:
-                self.numbers[a][b].destroy()
-            self.numbers[a][b] = Label(self,text=event.char,background='yellow')
-            self.numbers[a][b].place(x=self.positions[a][b][0]+20,y=self.positions[a][b][1]+20)
+                if self.numbers[a][b]['fg'] != self.fixed_c:
+                    self.numbers[a][b].destroy()
+                    self.numbers[a][b] = Label(self,text=event.char,fg=self.dynamic_c,font=('ariel',26),background=self.marker_c)
+                    self.numbers[a][b].place(x=self.positions[a][b][0]+15,y=self.positions[a][b][1]+7)
+            else:
+                self.numbers[a][b] = Label(self,text=event.char,fg=self.dynamic_c,font=('ariel',26),background=self.marker_c)
+                self.numbers[a][b].place(x=self.positions[a][b][0]+15,y=self.positions[a][b][1]+7)
+
         elif event.char == 'w':
             self.up()
         elif event.char == 's':
@@ -107,7 +122,7 @@ class Sudoku_grid(Canvas):
         self.refresh()
 
     def delete(self):
-        if self.numbers[self.marker[1][0]][self.marker[1][1]] != 0:
+        if self.numbers[self.marker[1][0]][self.marker[1][1]] != 0 and self.numbers[self.marker[1][0]][self.marker[1][1]]['fg'] != self.fixed_c:
             self.numbers[self.marker[1][0]][self.marker[1][1]].destroy()
             self.numbers[self.marker[1][0]][self.marker[1][1]] = 0
 
